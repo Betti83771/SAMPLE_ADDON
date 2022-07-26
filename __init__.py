@@ -17,12 +17,12 @@
 
 
 bl_info = {
-    "name": "2 Battiti",
+    "name": "production_name_here",
     "author": "Betti",
-    "version": (1, 2, 4),
+    "version": (0, 0, 0),
     "blender": (3, 0, 0),
-    "location": "View3D > 2B",
-    "description": """Addons for the 2B production""",
+    "location": "View3D > production_name_here",
+    "description": """Addons for the production_name_here production""",
     "warning": "",
     "doc_url": "",
     "category": "production-specific",
@@ -30,39 +30,53 @@ bl_info = {
 
 
 import bpy
-from importlib import reload
+import os
+import importlib 
+from sys import modules
 
-from . import timeline_operators
-from . import twoB_ui
-from . import update_comp_node_tree
-from . import ExtraSettingComp
-from . import make_anm_files_from_lay
-from . import enable_render_nodes
-from . import misc_operators
-from . import bind_unbind
 
-reload(timeline_operators)
-reload(twoB_ui)
-reload(update_comp_node_tree)
-reload(ExtraSettingComp)
-reload(make_anm_files_from_lay)
-reload(enable_render_nodes)
-reload(misc_operators)
-reload(bind_unbind)
+def import_and_reload_all_modules(modules_names:list):
+    """Detects the modules with a .py extension and without a special name thaa are part of the addon;
+    imports and reloads them, so when adding a new module I don't have to remember to add it to __init__.py
+    to be imported and reloaded, in order to be updated correctly by Blender upon making changes to it."""
+    
+    addon_path = os.path.split(__file__)[0]
+    for root, dirs, files in os.walk(addon_path, topdown=False):
+        if ".git" in root: continue
+        if ".vscode" in root: continue
+        if "__" in root: continue
+        root2 = root.replace(addon_path, ".").replace(os.sep, ".")
+        for file in files:
+            if file.startswith("."): continue
+            if not file.endswith(".py"): continue
+            if "__" in file: continue
+            file2 = file.replace(".py", "")
+            modules_names.append((root2 + "." + file2)[1:])
 
-from .twoB_ui import *
-from .update_comp_node_tree import *
+    for module_name in modules_names:
+        importlib.import_module(__name__ + module_name)
+        actual_module = modules[__name__ + module_name]
+        importlib.reload(actual_module)
+
+
+
+from .addon_updater_ops import *
+from .ui import *
+from .preferences_ui import Prefs
 
 
 
 
 def register():
-    twoB_ui_register()
+    import_and_reload_all_modules([])
+    addon_update_register(bl_info)
+    bpy.utils.register_class(Prefs)
+    ui_register()
+    
     
 
 
 def unregister():
-    twoB_ui_unregister()
-
-if __name__ == "__main__":
-    twoB_ui_register()
+    ui_unregister()
+    bpy.utils.unregister_class(Prefs)
+    addon_update_unregister()
