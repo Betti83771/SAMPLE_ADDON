@@ -1350,7 +1350,7 @@ def addon_update_register(bl_info):
     # **WARNING** Depending on the engine, this token can act like a password!!
     # Only provide a token if the project is *non-public*, see readme for
     # other considerations and suggestions from a security standpoint.
-    updater.private_token = "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"  # "tokenstring"
+    updater.private_token = None # "tokenstring"
 
     # Choose your own username, must match website (not needed for GitLab).
     updater.user = "Betti83771"
